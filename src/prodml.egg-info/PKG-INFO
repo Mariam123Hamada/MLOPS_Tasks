@@ -1,0 +1,23 @@
+Metadata-Version: 2.4
+Name: prodml
+Version: 0.1.0
+Summary: Production ML project for NYC taxi trip duration prediction
+Requires-Python: >=3.10
+License-File: LICENSE
+Requires-Dist: scikit-learn
+Requires-Dist: pandas
+Requires-Dist: pyarrow
+Requires-Dist: fastapi
+Requires-Dist: uvicorn
+Requires-Dist: pydantic
+Requires-Dist: pydantic-settings
+Requires-Dist: python-json-logger
+Provides-Extra: dev
+Requires-Dist: pytest; extra == "dev"
+Requires-Dist: pytest-cov; extra == "dev"
+Requires-Dist: ruff; extra == "dev"
+Requires-Dist: black; extra == "dev"
+Requires-Dist: mypy; extra == "dev"
+Requires-Dist: httpx; extra == "dev"
+Requires-Dist: pre-commit; extra == "dev"
+Dynamic: license-file
