@@ -6,9 +6,14 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     data_path: Path = Path("data/green_tripdata_2025-08.parquet")
 
+    onnx_model_path: Path = Path("models/model.onnx")
+
     model_path: Path = Path("../models/model.pkl")
 
     baseline_model_path: Path = Path("../models/baseline.pkl")
+    model_version: str = "0.1.0"
+
+    model_training_date: str = "2026-08-28"
 
     test_size: float = 0.2
 

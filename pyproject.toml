@@ -12,9 +12,12 @@ dependencies = [
     "uvicorn",
     "pydantic",
     "pydantic-settings",
-    "python-json-logger"
+    "python-json-logger",
+    "numpy",
+    "onnx",
+    "onnxruntime",
+    "skl2onnx"
 ]
-
 [project.optional-dependencies]
 dev = [
     "pytest",
@@ -28,6 +31,7 @@ dev = [
 
 [project.scripts]
 prodml-train = "prodml.train:main"
+prodml-export = "prodml.export:main"
 
 [build-system]
 requires = ["setuptools>=68"]

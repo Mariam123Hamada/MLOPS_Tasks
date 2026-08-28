@@ -12,6 +12,10 @@ Requires-Dist: uvicorn
 Requires-Dist: pydantic
 Requires-Dist: pydantic-settings
 Requires-Dist: python-json-logger
+Requires-Dist: numpy
+Requires-Dist: onnx
+Requires-Dist: onnxruntime
+Requires-Dist: skl2onnx
 Provides-Extra: dev
 Requires-Dist: pytest; extra == "dev"
 Requires-Dist: pytest-cov; extra == "dev"

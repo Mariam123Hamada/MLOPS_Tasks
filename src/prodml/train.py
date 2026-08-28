@@ -1,4 +1,6 @@
+import logging
 import pickle
+
 from sklearn.feature_extraction import DictVectorizer
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_absolute_error, mean_squared_error
@@ -6,8 +8,6 @@ from sklearn.metrics import mean_absolute_error, mean_squared_error
 from prodml.config import settings
 from prodml.data import load_data, split_data
 from prodml.features import create_features, prepare_feature_dicts
-import logging
-
 from prodml.logging_conf import configure_logging
 
 configure_logging()

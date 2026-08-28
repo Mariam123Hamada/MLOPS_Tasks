@@ -1,6 +1,5 @@
 import pandas as pd
 
-
 CATEGORICAL_FEATURES = ["PU_DO"]
 
 NUMERICAL_FEATURES = ["trip_distance"]

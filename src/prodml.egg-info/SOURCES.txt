@@ -5,6 +5,7 @@ src/prodml/__init__.py
 src/prodml/config.py
 src/prodml/data.py
 src/prodml/features.py
+src/prodml/logging_conf.py
 src/prodml/predict.py
 src/prodml/train.py
 src/prodml.egg-info/PKG-INFO

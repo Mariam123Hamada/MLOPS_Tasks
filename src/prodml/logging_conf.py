@@ -1,10 +1,8 @@
 import logging
 import sys
-
 from contextvars import ContextVar
 
 from pythonjsonlogger.json import JsonFormatter
-
 
 correlation_id_context: ContextVar[str] = ContextVar(
     "correlation_id",

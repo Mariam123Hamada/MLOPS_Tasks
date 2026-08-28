@@ -1,9 +1,9 @@
 import logging
 import pickle
 import time
-
+from collections.abc import Callable
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -71,12 +71,11 @@ class DurationPredictor:
         logger.debug("Feature vector: %s", features)
         trip_distance = features.get("trip_distance")
 
-        if isinstance(trip_distance, (int, float)):
-            if trip_distance > 100:
-                logger.warning(
-                    "Input outside training range: trip_distance=%.2f",
-                    trip_distance,
-                )
+        if isinstance(trip_distance, (int, float)) and trip_distance > 100:
+            logger.warning(
+                "Input outside training range: trip_distance=%.2f",
+                trip_distance,
+            )
         X = self.vectorizer.transform([features])
 
         prediction = self.model.predict(X)[0]

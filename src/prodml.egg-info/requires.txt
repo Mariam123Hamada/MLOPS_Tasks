@@ -6,6 +6,10 @@ uvicorn
 pydantic
 pydantic-settings
 python-json-logger
+numpy
+onnx
+onnxruntime
+skl2onnx
 
 [dev]
 pytest
