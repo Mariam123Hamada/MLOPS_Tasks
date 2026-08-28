@@ -89,7 +89,10 @@ def main() -> None:
 
     X_sparse = vectorizer.transform(feature_dicts)
 
-    X_dense = X_sparse.astype(np.float32).toarray()
+    if hasattr(X_sparse, "toarray"):
+        X_dense = X_sparse.astype(np.float32).toarray()
+    else:
+        X_dense = np.asarray(X_sparse, dtype=np.float32)
 
     session = ort.InferenceSession(
         str(settings.onnx_model_path),

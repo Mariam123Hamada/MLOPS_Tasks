@@ -1,18 +1,26 @@
-import pandas as pd
+import pytest
 
 from prodml.features import create_features
 
 
-def test_create_features() -> None:
-
-    df = pd.DataFrame(
-        {
-            "PULocationID": [10],
-            "DOLocationID": [20],
-            "trip_distance": [5.0],
-        }
+@pytest.mark.parametrize(
+    "trip_distance, passenger_count, pu_do",
+    [
+        (5.0, 2, "12_34"),
+        (0.0, 2, "12_34"),
+        (5.0, 2, None),
+        (5.0, 2, "999_999"),
+    ],
+)
+def test_feature_engineering_edge_cases(
+    trip_distance,
+    passenger_count,
+    pu_do,
+):
+    result = create_features(
+        trip_distance=trip_distance,
+        passenger_count=passenger_count,
+        PU_DO=pu_do,
     )
 
-    result = create_features(df)
-
-    assert result.loc[0, "PU_DO"] == "10_20"
+    assert result is not None

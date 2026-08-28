@@ -2,8 +2,10 @@ LICENSE
 README.md
 pyproject.toml
 src/prodml/__init__.py
+src/prodml/benchmark.py
 src/prodml/config.py
 src/prodml/data.py
+src/prodml/export.py
 src/prodml/features.py
 src/prodml/logging_conf.py
 src/prodml/predict.py
@@ -16,5 +18,9 @@ src/prodml.egg-info/requires.txt
 src/prodml.egg-info/top_level.txt
 src/prodml/api/__init__.py
 src/prodml/api/main.py
+src/prodml/api/schemas.py
+tests/test_api.py
 tests/test_feature.py
+tests/test_parity.py
 tests/test_predict.py
+tests/test_serialization.py
