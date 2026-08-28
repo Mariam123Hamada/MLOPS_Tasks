@@ -1,8 +1,4 @@
-# src/prodml/train.py
-
 import pickle
-
-
 from sklearn.feature_extraction import DictVectorizer
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_absolute_error, mean_squared_error
@@ -10,6 +6,13 @@ from sklearn.metrics import mean_absolute_error, mean_squared_error
 from prodml.config import settings
 from prodml.data import load_data, split_data
 from prodml.features import create_features, prepare_feature_dicts
+import logging
+
+from prodml.logging_conf import configure_logging
+
+configure_logging()
+
+logger = logging.getLogger(__name__)
 
 
 def train_model() -> dict[str, float]:
@@ -58,10 +61,13 @@ def train_model() -> dict[str, float]:
             },
             f,
         )
-
-    print(f"Validation RMSE: {rmse:.4f}")
-    print(f"Validation MAE: {mae:.4f}")
-
+    logger.info(
+        "Model validation completed",
+        extra={
+            "rmse": float(rmse),
+            "mae": float(mae),
+        },
+    )
     return {
         "rmse": float(rmse),
         "mae": float(mae),

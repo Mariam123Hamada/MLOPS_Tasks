@@ -1,14 +1,15 @@
-# src/prodml/predict.py
-
+import logging
 import pickle
 import time
 
 from pathlib import Path
 from typing import Any, Callable
 
+logger = logging.getLogger(__name__)
+
 
 def timed(func: Callable[..., float]) -> Callable[..., float]:
-    """Measure and print function execution time."""
+    """Measure function execution time."""
 
     def wrapper(*args: Any, **kwargs: Any) -> float:
         start = time.perf_counter()
@@ -17,7 +18,11 @@ def timed(func: Callable[..., float]) -> Callable[..., float]:
 
         elapsed = time.perf_counter() - start
 
-        print(f"{func.__name__} executed in " f"{elapsed:.6f} seconds")
+        logger.info(
+            "Prediction served: function=%s latency_ms=%.3f",
+            func.__name__,
+            elapsed * 1000,
+        )
 
         return result
 
@@ -40,10 +45,17 @@ class DurationPredictor:
         cls,
         model_path: str | Path,
     ) -> "DurationPredictor":
-        """Load a trained model from disk."""
 
-        with open(model_path, "rb") as f:
-            artifact = pickle.load(f)
+        try:
+            with open(model_path, "rb") as f:
+                artifact = pickle.load(f)
+
+        except Exception:
+            logger.exception(
+                "Model load failure: path=%s",
+                model_path,
+            )
+            raise
 
         return cls(
             model=artifact["model"],
@@ -56,7 +68,15 @@ class DurationPredictor:
         features: dict[str, Any],
     ) -> float:
         """Predict duration for one trip."""
+        logger.debug("Feature vector: %s", features)
+        trip_distance = features.get("trip_distance")
 
+        if isinstance(trip_distance, (int, float)):
+            if trip_distance > 100:
+                logger.warning(
+                    "Input outside training range: trip_distance=%.2f",
+                    trip_distance,
+                )
         X = self.vectorizer.transform([features])
 
         prediction = self.model.predict(X)[0]
