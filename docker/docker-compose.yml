@@ -1,0 +1,16 @@
+services:
+  api:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    image: prodml-api:0.1.0
+    environment:
+      PRODML_MODEL_PATH: /app/models/model.pkl
+      PRODML_ONNX_MODEL_PATH: /app/models/model.onnx
+      PRODML_DATA_PATH: /app/models/green_tripdata_2025-08.parquet
+      PYTHONUNBUFFERED: "1"
+    volumes:
+      - ../models:/app/models
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
