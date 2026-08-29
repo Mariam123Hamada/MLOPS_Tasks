@@ -8,9 +8,9 @@ class Settings(BaseSettings):
 
     onnx_model_path: Path = Path("models/model.onnx")
 
-    model_path: Path = Path("../models/model.pkl")
+    model_path: Path = Path("models/model.pkl")
 
-    baseline_model_path: Path = Path("../models/baseline.pkl")
+    baseline_model_path: Path = Path("models/baseline.pkl")
     model_version: str = "0.1.0"
 
     model_training_date: str = "2026-08-28"
