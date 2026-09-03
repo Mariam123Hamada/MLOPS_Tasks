@@ -1,4 +1,6 @@
 scikit-learn
+boto3
+psycopg2
 pandas
 pyarrow
 fastapi
@@ -10,6 +12,10 @@ numpy
 onnx
 onnxruntime
 skl2onnx
+mlflow
+xgboost
+torch
+matplotlib
 
 [dev]
 pytest
