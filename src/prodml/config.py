@@ -18,6 +18,8 @@ class Settings(BaseSettings):
         default_factory=lambda: repo_path("models", "model.onnx")
     )
     model_path: Path = Field(default_factory=lambda: repo_path("models", "model.pkl"))
+    MODEL_NAME: str = "ride-duration-predictor"
+    MODEL_STAGE: str = "Production"
     baseline_model_path: Path = Field(
         default_factory=lambda: repo_path("models", "baseline.pkl")
     )

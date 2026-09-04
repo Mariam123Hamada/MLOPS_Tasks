@@ -25,6 +25,7 @@ from sklearn.metrics import (
     mean_squared_error,
     r2_score,
 )
+from sklearn.pipeline import Pipeline
 from torch import nn
 
 from prodml.config import settings
@@ -235,6 +236,7 @@ def train_linear_regression(
     y_train,
     y_val,
     feature_names,
+    dv,
     data_version,
 ) -> dict[str, float]:
     """Train and track Linear Regression baseline."""
@@ -287,8 +289,16 @@ def train_linear_regression(
                 "Linear Regression Coefficients",
             )
 
+            # Create pipeline with vectorizer and model
+            pipeline = Pipeline(
+                [
+                    ("vectorizer", dv),
+                    ("model", model),
+                ]
+            )
+
             mlflow.sklearn.log_model(
-                model,
+                pipeline,
                 name="model",
             )
 
@@ -727,7 +737,7 @@ def train_model() -> dict[str, float]:
         y_train,
         y_val,
         feature_names,
-        _,
+        dv,
     ) = prepare_dataset()
 
     linear_metrics = train_linear_regression(
@@ -736,6 +746,7 @@ def train_model() -> dict[str, float]:
         y_train,
         y_val,
         feature_names,
+        dv,
         data_version,
     )
 

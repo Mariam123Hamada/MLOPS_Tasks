@@ -1,11 +1,14 @@
 import logging
-import pickle
 import time
 from collections.abc import Callable
-from pathlib import Path
 from typing import Any
+import mlflow
+from dotenv import load_dotenv
 
 logger = logging.getLogger(__name__)
+
+load_dotenv()
+mlflow.set_tracking_uri("http://localhost:5000")
 
 
 def timed(func: Callable[..., float]) -> Callable[..., float]:
@@ -40,27 +43,55 @@ class DurationPredictor:
         self.model = model
         self.vectorizer = vectorizer
 
+    # @classmethod
+    # def load(
+    #     cls,
+    #     model_path: str | Path,
+    # ) -> "DurationPredictor":
+
+    #     try:
+    #         with open(model_path, "rb") as f:
+    #             artifact = pickle.load(f)
+
+    #     except Exception:
+    #         logger.exception(
+    #             "Model load failure: path=%s",
+    #             model_path,
+    #         )
+    #         raise
+
+    #     return cls(
+    #         model=artifact["model"],
+    #         vectorizer=artifact["vectorizer"],
+    #     )
+
     @classmethod
-    def load(
-        cls,
-        model_path: str | Path,
-    ) -> "DurationPredictor":
+    def load(cls, model_name: str, model_stage: str):
+        model_uri = f"models:/{model_name}/{model_stage}"
+
+        logger.info("Loading model from MLflow: uri=%s", model_uri)
 
         try:
-            with open(model_path, "rb") as f:
-                artifact = pickle.load(f)
+            # Load the sklearn Pipeline (contains vectorizer and model)
+            pipeline = mlflow.sklearn.load_model(model_uri)
+
+            # Extract vectorizer and model from pipeline
+            vectorizer = pipeline.named_steps["vectorizer"]
+            model = pipeline.named_steps["model"]
+
+            logger.info(
+                "MLflow model loaded successfully: uri=%s",
+                model_uri,
+            )
+
+            return cls(model=model, vectorizer=vectorizer)
 
         except Exception:
             logger.exception(
-                "Model load failure: path=%s",
-                model_path,
+                "MLflow model load failure: uri=%s",
+                model_uri,
             )
             raise
-
-        return cls(
-            model=artifact["model"],
-            vectorizer=artifact["vectorizer"],
-        )
 
     @timed
     def predict_one(
