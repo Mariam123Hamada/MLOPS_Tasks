@@ -1,0 +1,79 @@
+
+stages:
+  prepare:
+    cmd: python pipeline/prepare.py
+    deps:
+      - data/green_tripdata_2025-08.parquet
+      - src/prodml/data.py
+      - src/prodml/config.py
+      - src/prodml/features.py
+    params:
+      - prepare.random_state
+      - prepare.validation_split
+    outs:
+      - data/processed/train.parquet:
+          cache: true
+      - data/processed/val.parquet:
+          cache: true
+    metrics:
+      - data/processed/data_quality.json:
+          cache: false
+
+  featurize:
+    cmd: python pipeline/featurize.py
+    deps:
+      - data/processed/train.parquet
+      - data/processed/val.parquet
+      - src/prodml/features.py
+      - pipeline/featurize.py
+    params:
+      - featurize.min_trip_duration
+      - featurize.max_trip_duration
+    outs:
+      - data/features/X_train.pkl:
+          cache: true
+      - data/features/X_val.pkl:
+          cache: true
+      - data/features/y_train.pkl:
+          cache: true
+      - data/features/y_val.pkl:
+          cache: true
+      - data/features/vectorizer.pkl:
+          cache: true
+    metrics:
+      - data/features/feature_stats.json:
+          cache: false
+
+  train:
+    cmd: python pipeline/train.py
+    deps:
+      - data/features/X_train.pkl
+      - data/features/X_val.pkl
+      - data/features/y_train.pkl
+      - data/features/y_val.pkl
+      - data/features/vectorizer.pkl
+      - src/prodml/train.py
+    params:
+      - train.model_type
+      - train.fit_intercept
+      - train.random_state
+    outs:
+      - models/model.pkl:
+          cache: true
+    metrics:
+      - metrics/train_metrics.json:
+          cache: false
+
+  evaluate:
+    cmd: python pipeline/evaluate.py
+    deps:
+      - models/model.pkl
+      - data/features/X_val.pkl
+      - data/features/y_val.pkl
+      - pipeline/evaluate.py
+    params:
+      - evaluate.min_r2_score
+      - evaluate.max_rmse
+    metrics:
+      - metrics/eval_metrics.json:
+          cache: false

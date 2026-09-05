@@ -1,0 +1,8 @@
+{
+  "train_rmse": 4.677748958607236,
+  "train_mae": 3.1859992733350975,
+  "val_rmse": 6.549980210964413,
+  "val_mae": 4.299409270976143,
+  "n_features": 5215,
+  "model_type": "linear_regression"
+}

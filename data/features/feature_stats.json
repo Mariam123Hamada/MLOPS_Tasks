@@ -1,0 +1,11 @@
+{
+  "n_features": 5215,
+  "feature_names_sample": [
+    "PU_DO=100_208",
+    "PU_DO=100_223",
+    "PU_DO=100_48",
+    "PU_DO=100_75",
+    "PU_DO=101_121"
+  ],
+  "sparsity": 0.9996164908916587
+}

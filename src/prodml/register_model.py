@@ -84,8 +84,8 @@
 
 
 import mlflow
-from mlflow import MlflowClient
 from dotenv import load_dotenv
+from mlflow import MlflowClient
 
 load_dotenv()
 

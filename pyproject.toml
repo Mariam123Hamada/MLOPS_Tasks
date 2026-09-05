@@ -7,6 +7,8 @@ requires-python = ">=3.10"
 dependencies = [
     "scikit-learn",
     "boto3",
+    "dvc" ,
+    "dvc_s3",
     "psycopg2-binary",
     "pandas",
     "pyarrow",

@@ -7,6 +7,7 @@ import time
 from pathlib import Path
 
 import matplotlib
+import yaml
 
 matplotlib.use("Agg")
 
@@ -71,15 +72,51 @@ def get_data_hash(path: Path) -> str:
     return sha256.hexdigest()
 
 
+def get_dvc_hash(data_file: Path) -> str | None:
+    """Extract DVC hash from .dvc file if it exists.
+
+    Returns the MD5 hash tracked by DVC, or None if not found.
+    """
+    data_file = Path(data_file)
+    dvc_file = data_file.parent / f"{data_file.name}.dvc"
+
+    if not dvc_file.exists():
+        logger.warning(f"DVC file not found: {dvc_file}")
+        return None
+
+    try:
+        with open(dvc_file, "r") as f:
+            dvc_meta = yaml.safe_load(f)
+
+        # Extract the MD5 hash from outs[0].md5
+        if "outs" in dvc_meta and len(dvc_meta["outs"]) > 0:
+            md5_hash = dvc_meta["outs"][0].get("md5", None)
+            if md5_hash:
+                logger.info(f"Retrieved DVC hash for {data_file.name}: {md5_hash}")
+            return md5_hash
+    except (FileNotFoundError, OSError, ValueError) as e:
+        logger.warning(f"Failed to read DVC hash from {dvc_file}: {e}")
+
+    return None
+
+
 def log_common_tags(data_version: str) -> None:
     """Log tags shared by every MLflow run."""
-    mlflow.set_tags(
-        {
-            "git_commit": get_git_commit(),
-            "data_version": data_version,
-            "author": get_git_author(),
-        }
-    )
+    tags = {
+        "git_commit": get_git_commit(),
+        "data_version": data_version,
+        "author": get_git_author(),
+    }
+
+    # Add DVC data hash if available
+    data_file = settings.data_path
+    if data_file.exists():
+        dvc_hash = get_dvc_hash(data_file)
+        if dvc_hash:
+            tags["dvc_data_hash"] = dvc_hash
+            logger.info(f"Tracked DVC data hash: {dvc_hash}")
+
+    mlflow.set_tags(tags)
 
 
 def log_requirements() -> None:

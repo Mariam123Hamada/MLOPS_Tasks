@@ -1,0 +1,155 @@
+schema: '2.0'
+stages:
+  prepare:
+    cmd: python pipeline/prepare.py
+    deps:
+    - path: data/green_tripdata_2025-08.parquet
+      hash: md5
+      md5: 137701b9ba09f3fa98e94b430b8d469b
+      size: 1149707
+    - path: src/prodml/config.py
+      hash: md5
+      md5: 6c50d790c952266d3e53e9be1499e636
+      size: 1756
+    - path: src/prodml/data.py
+      hash: md5
+      md5: 96b1ec11f324e9dfc9330b0da14292eb
+      size: 959
+    - path: src/prodml/features.py
+      hash: md5
+      md5: c2c8da56a49e4a2b1f80d54369b0af5a
+      size: 1234
+    params:
+      params.yaml:
+        prepare.random_state: 42
+        prepare.validation_split: 0.2
+    outs:
+    - path: data/processed/data_quality.json
+      hash: md5
+      md5: d2ff81de89c249528b02f4e4e7de675d
+      size: 692
+    - path: data/processed/train.parquet
+      hash: md5
+      md5: 196b0f6ad60245ea0963c2cefb79aa1a
+      size: 1208645
+    - path: data/processed/val.parquet
+      hash: md5
+      md5: 58e99a2280b8e1b83d3e7c3e2fb1ca30
+      size: 332901
+  featurize:
+    cmd: python pipeline/featurize.py
+    deps:
+    - path: data/processed/train.parquet
+      hash: md5
+      md5: 196b0f6ad60245ea0963c2cefb79aa1a
+      size: 1208645
+    - path: data/processed/val.parquet
+      hash: md5
+      md5: 58e99a2280b8e1b83d3e7c3e2fb1ca30
+      size: 332901
+    - path: pipeline/featurize.py
+      hash: md5
+      md5: 38b85df27831156d2fbc3b461643a317
+      size: 2828
+    - path: src/prodml/features.py
+      hash: md5
+      md5: c2c8da56a49e4a2b1f80d54369b0af5a
+      size: 1234
+    params:
+      params.yaml:
+        featurize.max_trip_duration: 200
+        featurize.min_trip_duration: 0
+    outs:
+    - path: data/features/X_train.pkl
+      hash: md5
+      md5: 5f7c8014db005328dd7881f846617e7c
+      size: 1388392
+    - path: data/features/X_val.pkl
+      hash: md5
+      md5: 88f5801e4b4b4256a1386aa08f87aea9
+      size: 336076
+    - path: data/features/feature_stats.json
+      hash: md5
+      md5: b8624c2eb6e89e4ebaac66305618d788
+      size: 203
+    - path: data/features/vectorizer.pkl
+      hash: md5
+      md5: 167a83c0d71a628c9bf73a9ad6d742ef
+      size: 119572
+    - path: data/features/y_train.pkl
+      hash: md5
+      md5: 93854df7c6451a9dc7e2349673c257a1
+      size: 277761
+    - path: data/features/y_val.pkl
+      hash: md5
+      md5: 918ece44e170c4af0129d9e64a8bd282
+      size: 69561
+  train:
+    cmd: python pipeline/train.py
+    deps:
+    - path: data/features/X_train.pkl
+      hash: md5
+      md5: 5f7c8014db005328dd7881f846617e7c
+      size: 1388392
+    - path: data/features/X_val.pkl
+      hash: md5
+      md5: 88f5801e4b4b4256a1386aa08f87aea9
+      size: 336076
+    - path: data/features/vectorizer.pkl
+      hash: md5
+      md5: 167a83c0d71a628c9bf73a9ad6d742ef
+      size: 119572
+    - path: data/features/y_train.pkl
+      hash: md5
+      md5: 93854df7c6451a9dc7e2349673c257a1
+      size: 277761
+    - path: data/features/y_val.pkl
+      hash: md5
+      md5: 918ece44e170c4af0129d9e64a8bd282
+      size: 69561
+    - path: src/prodml/train.py
+      hash: md5
+      md5: 9cd4117de9d0d89061fe30219385396a
+      size: 20727
+    params:
+      params.yaml:
+        train.fit_intercept: true
+        train.model_type: linear_regression
+        train.random_state: 42
+    outs:
+    - path: metrics/train_metrics.json
+      hash: md5
+      md5: 70ec4e476042edc9b72c040e5e1d5ca1
+      size: 203
+    - path: models/model.pkl
+      hash: md5
+      md5: 49057948e6a37540bbc7aeb17d49f9ff
+      size: 161795
+  evaluate:
+    cmd: python pipeline/evaluate.py
+    deps:
+    - path: data/features/X_val.pkl
+      hash: md5
+      md5: 88f5801e4b4b4256a1386aa08f87aea9
+      size: 336076
+    - path: data/features/y_val.pkl
+      hash: md5
+      md5: 918ece44e170c4af0129d9e64a8bd282
+      size: 69561
+    - path: models/model.pkl
+      hash: md5
+      md5: 49057948e6a37540bbc7aeb17d49f9ff
+      size: 161795
+    - path: pipeline/evaluate.py
+      hash: md5
+      md5: f202a18f42dcc80a2cccf8d9856f8b70
+      size: 2127
+    params:
+      params.yaml:
+        evaluate.max_rmse: 15.0
+        evaluate.min_r2_score: 0.5
+    outs:
+    - path: metrics/eval_metrics.json
+      hash: md5
+      md5: 90f1c1343d1748cb48a59e643f0b4ab7
+      size: 122

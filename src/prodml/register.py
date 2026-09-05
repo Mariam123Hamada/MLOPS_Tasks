@@ -1,7 +1,6 @@
 import mlflow
 from mlflow import MlflowClient
 
-
 MODEL_NAME = "ride-duration-predictor"
 
 
