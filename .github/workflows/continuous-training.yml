@@ -1,0 +1,206 @@
+name: Continuous Training
+
+on:
+  schedule:
+    - cron: "0 0 * * 0"
+
+  workflow_dispatch:
+    inputs:
+      data-version:
+        description: "Data version / identifier"
+        required: false
+        default: "latest"
+        type: string
+
+  repository_dispatch:
+    types:
+      - data-drift
+
+permissions:
+  contents: read
+
+jobs:
+
+  train:
+    name: Pull Data, Validate, Train and Evaluate
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Install project dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      - name: Show trigger information
+        run: |
+          echo "Trigger: ${{ github.event_name }}"
+          echo "Data version: ${{ inputs.data-version || 'latest' }}"
+
+      - name: Pull DVC data
+        run: |
+          dvc pull
+
+      - name: Validate raw data
+        run: |
+          python - <<'PY'
+          import pandas as pd
+
+          path = "data/green_tripdata_2025-08.parquet"
+
+          df = pd.read_parquet(path)
+
+          required_columns = {
+              "tpep_pickup_datetime",
+              "tpep_dropoff_datetime",
+              "PULocationID",
+              "DOLocationID",
+              "trip_distance",
+          }
+
+          missing = required_columns - set(df.columns)
+
+          if missing:
+              raise ValueError(
+                  f"Missing required columns: {sorted(missing)}"
+              )
+
+          if df.empty:
+              raise ValueError("Dataset is empty.")
+
+          print(f"Rows: {len(df):,}")
+          print("Required columns are present.")
+          print("Data validation passed.")
+          PY
+
+      - name: Run DVC training and evaluation pipeline
+        run: |
+          dvc repro
+
+      - name: Show evaluation metrics
+        run: |
+          cat metrics/eval_metrics.json
+
+      - name: Upload candidate model and metrics
+        uses: actions/upload-artifact@v4
+        with:
+          name: candidate-model
+          path: |
+            models/model.pkl
+            metrics/eval_metrics.json
+
+
+  quality-gate:
+    name: Candidate vs Production
+    needs: train
+    runs-on: ubuntu-latest
+
+    outputs:
+      promote: ${{ steps.gate.outputs.promote }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install project dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      - name: Download candidate model and metrics
+        uses: actions/download-artifact@v4
+        with:
+          name: candidate-model
+
+      - name: Run promotion gate
+        id: gate
+        env:
+          PRODUCTION_MAE: ${{ secrets.PRODUCTION_MAE }}
+          CT_MAE_MARGIN: ${{ vars.CT_MAE_MARGIN || '0.05' }}
+        run: |
+          python scripts/ct_quality_gate.py \
+            --production-mae "$PRODUCTION_MAE" \
+            --metrics metrics/eval_metrics.json \
+            --margin "$CT_MAE_MARGIN"
+
+
+  promote-staging:
+    name: Promote Candidate to Staging
+    needs: quality-gate
+    if: needs.quality-gate.outputs.promote == 'true'
+    runs-on: ubuntu-latest
+
+    environment:
+      name: staging
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Promote model to Staging
+        run: |
+          echo "Candidate passed the quality gate."
+          echo "Promoting candidate model to Staging."
+
+
+  build:
+    name: Build Candidate Docker Image
+    needs: promote-staging
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Extract short commit SHA
+        id: vars
+        run: |
+          echo "short_sha=${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+
+      - name: Build and push candidate image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/mlops-tasks:ct-${{ steps.vars.outputs.short_sha }}
+
+
+  notify:
+    name: Notify
+    needs:
+      - quality-gate
+      - promote-staging
+      - build
+    if: always()
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Report CT result
+        run: |
+          echo "Continuous Training completed."
+          echo "Quality gate: ${{ needs.quality-gate.result }}"
+          echo "Staging promotion: ${{ needs.promote-staging.result }}"
+          echo "Docker build: ${{ needs.build.result }}"
