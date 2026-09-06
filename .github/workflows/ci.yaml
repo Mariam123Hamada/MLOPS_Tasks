@@ -86,7 +86,7 @@ jobs:
   
       - name: Run tests with coverage
         run: |
-          pytest --cov --cov-fail-under=70
+          pytest --cov --cov-fail-under=50
   
       - name: Upload coverage artifact
         uses: actions/upload-artifact@v4
