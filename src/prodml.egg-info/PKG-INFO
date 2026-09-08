@@ -5,6 +5,8 @@ Summary: Production ML project for NYC taxi trip duration prediction
 Requires-Python: >=3.10
 License-File: LICENSE
 Requires-Dist: scikit-learn
+Requires-Dist: boto3
+Requires-Dist: psycopg2
 Requires-Dist: pandas
 Requires-Dist: pyarrow
 Requires-Dist: fastapi
@@ -16,6 +18,10 @@ Requires-Dist: numpy
 Requires-Dist: onnx
 Requires-Dist: onnxruntime
 Requires-Dist: skl2onnx
+Requires-Dist: mlflow
+Requires-Dist: xgboost
+Requires-Dist: torch
+Requires-Dist: matplotlib
 Provides-Extra: dev
 Requires-Dist: pytest; extra == "dev"
 Requires-Dist: pytest-cov; extra == "dev"

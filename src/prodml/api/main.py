@@ -50,7 +50,7 @@ async def lifespan(
     try:
         logger.info("Loading model at application startup")
 
-        predictor = DurationPredictor.load(settings.model_path)
+        predictor = DurationPredictor.load(settings.MODEL_NAME, settings.MODEL_STAGE)
 
         app.state.predictor = predictor
 

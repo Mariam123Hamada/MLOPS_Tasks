@@ -6,6 +6,10 @@ requires-python = ">=3.10"
 
 dependencies = [
     "scikit-learn",
+    "boto3",
+    "dvc" ,
+    "dvc_s3",
+    "psycopg2-binary",
     "pandas",
     "pyarrow",
     "fastapi",
@@ -16,7 +20,11 @@ dependencies = [
     "numpy",
     "onnx",
     "onnxruntime",
-    "skl2onnx"
+    "skl2onnx",
+    "mlflow",
+    "xgboost",
+    "torch",
+    "matplotlib",
 ]
 [project.optional-dependencies]
 dev = [

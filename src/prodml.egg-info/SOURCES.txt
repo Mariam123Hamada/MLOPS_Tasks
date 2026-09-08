@@ -20,6 +20,7 @@ src/prodml/api/__init__.py
 src/prodml/api/main.py
 src/prodml/api/schemas.py
 tests/test_api.py
+tests/test_config.py
 tests/test_feature.py
 tests/test_parity.py
 tests/test_predict.py

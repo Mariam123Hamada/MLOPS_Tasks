@@ -1,4 +1,5 @@
 services:
+
   api:
     build:
       context: ..
@@ -8,9 +9,78 @@ services:
       PRODML_MODEL_PATH: /app/models/model.pkl
       PRODML_ONNX_MODEL_PATH: /app/models/model.onnx
       PRODML_DATA_PATH: /app/models/green_tripdata_2025-08.parquet
+      MLFLOW_TRACKING_URI: http://mlflow:5000
       PYTHONUNBUFFERED: "1"
     volumes:
       - ../models:/app/models
     ports:
       - "8000:8000"
+    depends_on:
+      - mlflow
     restart: unless-stopped
+
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: mlflow
+      POSTGRES_PASSWORD: mlflow
+      POSTGRES_DB: mlflow
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+
+  minio:
+    image: minio/minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minio
+      MINIO_ROOT_PASSWORD: minio123
+    volumes:
+      - minio_data:/data
+    ports:
+      - "9010:9000"
+      - "9001:9001"
+    restart: unless-stopped
+
+  create-minio-bucket:
+    image: minio/mc
+    depends_on:
+      - minio
+    entrypoint: >
+      /bin/sh -c "
+      until /usr/bin/mc alias set minio http://minio:9000 minio minio123; do
+        echo 'Waiting for MinIO...';
+        sleep 2;
+      done;
+      /usr/bin/mc mb --ignore-existing minio/mlflow;
+      exit 0;
+      "
+
+  mlflow:
+    build:
+      context: .
+      dockerfile: Dockerfile.mlflow
+    image: prodml-mlflow:3.3.2
+    depends_on:
+      - postgres
+      - minio
+      - create-minio-bucket
+    environment:
+      AWS_ACCESS_KEY_ID: minio
+      AWS_SECRET_ACCESS_KEY: minio123
+      MLFLOW_S3_ENDPOINT_URL: http://minio:9000
+    command: >
+      mlflow server
+      --host 0.0.0.0
+      --port 5000
+      --backend-store-uri postgresql://mlflow:mlflow@postgres:5432/mlflow
+      --default-artifact-root s3://mlflow/
+    ports:
+      - "5000:5000"
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  minio_data:
